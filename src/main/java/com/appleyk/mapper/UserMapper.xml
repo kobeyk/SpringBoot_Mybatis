@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.appleyk.mapper.UserMapper">
+
+    <!--用户表结果集映射-->
+    <resultMap type="com.appleyk.entity.UserEntity" id="userEntityMap">
+        <id property="id" column="id"/>
+        <result property = "name" column = "name"/>
+        <result property = "sex" column = "sex"/>
+    </resultMap>
+
+    <!--用户表列名-->
+    <sql id="TABLE_COLUMNS">
+       id,name,sex
+    </sql>
+
+    <!--要实现动态传入表名、列名，需要做如下修改-->
+    <!--添加属性statementType="STATEMENT"-->
+    <!--同时sql里属于变量取值的都改成${xxxx}，而不是#{xxx}-->
+    <!--根据查询过滤器+where条件语句+排序条件查询用户列表结果集-->
+    <select id="getUsers" statementType="STATEMENT" resultMap="userEntityMap">
+        select
+        <include refid="TABLE_COLUMNS"/>
+        from  user
+        <if test="whereSql != null and whereSql != '' ">
+            WHERE
+            ${whereSql}
+        </if>
+        <if test="orderSql !=null and orderSql !=''">
+            ${orderSql}
+        </if>
+        <if test="filter.pageSize == 0">
+            LIMIT 100000
+        </if>
+    </select>
+
+
+    <!--批量插入用户信息-->
+    <insert id ="insertBatch" parameterType="java.util.List">
+        insert into user
+        (name,sex)
+        values
+        <foreach collection ="users" item="user" index= "index" separator =",">
+            (
+            #{user.name},
+            #{user.sex}
+            )
+        </foreach>
+    </insert>
+
+
+
+    <!--批量更新用户表数据-->
+    <update id ="updateBatch" parameterType="java.util.List">
+
+        <foreach collection ="users" item="user" index= "index" close=";" separator =";">
+            update user
+            <set>
+                name = #{user.name}
+            </set>
+            <where>
+                 id =#{user.id}
+            </where>
+        </foreach>
+    </update>
+
+</mapper>
+
